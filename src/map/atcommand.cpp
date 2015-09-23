@@ -1197,45 +1197,6 @@ ATCE atcommand_speed(Session *s, dumb_ptr<map_session_data> sd,
 }
 
 static
-ATCE atcommand_Restartspeed(Session *s, dumb_ptr<map_session_data> sd,
-        ZString message)
-{
-    if (!message)
-    {
-//        AString output = STRPRINTF(
-//                "Please, enter a speed value (usage: @speed <%d-%d>)."_fmt,
-//                static_cast<uint32_t>(MIN_WALK_SPEED.count()),
-//                static_cast<uint32_t>(MAX_WALK_SPEED.count()));
-//        clif_displaymessage(s, output);
-//        return ATCE::USAGE;
-	sd->speed = 200;
-        clif_updatestatus(sd, SP::SPEED);
-        clif_displaymessage(s, "Speed changed."_s);
-    }
-
-    interval_t speed = static_cast<interval_t>(atoi(message.c_str()));
-    if (speed >= MIN_WALK_SPEED && speed <= MAX_WALK_SPEED)
-    {
-        sd->speed = speed;
-        //sd->walktimer = x;
-        //この文を追加 by れ
-        clif_updatestatus(sd, SP::SPEED);
-        clif_displaymessage(s, "Speed changed."_s);
-    }
-    else
-    {
-        AString output = STRPRINTF(
-                "Please, enter a valid speed value (usage: @speed <%d-%d>)."_fmt,
-                static_cast<uint32_t>(MIN_WALK_SPEED.count()),
-                static_cast<uint32_t>(MAX_WALK_SPEED.count()));
-        clif_displaymessage(s, output);
-        return ATCE::RANGE;
-    }
-
-    return ATCE::OKAY;
-}
-
-static
 ATCE atcommand_storage(Session *s, dumb_ptr<map_session_data> sd,
         ZString)
 {
@@ -2065,6 +2026,35 @@ ATCE atcommand_zeny(Session *s, dumb_ptr<map_session_data> sd,
         return ATCE::USAGE;
 
     new_zeny = sd->status.zeny + zeny;
+    if (zeny > 0 && (zeny > MAX_ZENY || new_zeny > MAX_ZENY))
+        // fix positiv overflow
+        new_zeny = MAX_ZENY;
+    else if (zeny < 0 && (zeny < -MAX_ZENY || new_zeny < 0))
+        // fix negativ overflow
+        new_zeny = 0;
+
+    if (new_zeny != sd->status.zeny)
+    {
+        sd->status.zeny = new_zeny;
+        clif_updatestatus(sd, SP::ZENY);
+        clif_displaymessage(s, "Number of zenys changed!"_s);
+    }
+    else
+        return ATCE::RANGE;
+
+    return ATCE::OKAY;
+}
+
+static
+ATCE atcommand_pisto(Session *s, dumb_ptr<map_session_data> sd,
+        ZString message)
+{
+    int zeny, new_zeny;
+
+    if (!extract(message, &zeny) || zeny == 0)
+        return ATCE::USAGE;
+
+    new_zeny = sd->status.zeny - zeny;
     if (zeny > 0 && (zeny > MAX_ZENY || new_zeny > MAX_ZENY))
         // fix positiv overflow
         new_zeny = MAX_ZENY;
@@ -5042,9 +5032,6 @@ Map<XString, AtCommandInfo> atcommand_info =
     {"speed"_s, {"<rate>"_s,
         60, atcommand_speed,
         "Set walk rate"_s}},
-    {"Restartspeed"_s, {"<rate>"_s,
-        60, atcommand_Restartspeed,
-        "Set walk rate"_s}},
     {"storage"_s, {""_s,
         99, atcommand_storage,
         "Open your storage"_s}},
@@ -5119,6 +5106,9 @@ Map<XString, AtCommandInfo> atcommand_info =
         "Increase your skill points"_s}},
     {"zeny"_s, {"<amount>"_s,
         80, atcommand_zeny,
+        "Change how much money you have"_s}},
+    {"pisto"_s, {"<amount>"_s,
+        80, atcommand_pisto,
         "Change how much money you have"_s}},
     {"str"_s, {"<delta>"_s,
         60, atcommand_param<ATTR::STR>,
