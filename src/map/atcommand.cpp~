@@ -1197,45 +1197,6 @@ ATCE atcommand_speed(Session *s, dumb_ptr<map_session_data> sd,
 }
 
 static
-ATCE atcommand_Restartspeed(Session *s, dumb_ptr<map_session_data> sd,
-        ZString message)
-{
-    if (!message)
-    {
-//        AString output = STRPRINTF(
-//                "Please, enter a speed value (usage: @speed <%d-%d>)."_fmt,
-//                static_cast<uint32_t>(MIN_WALK_SPEED.count()),
-//                static_cast<uint32_t>(MAX_WALK_SPEED.count()));
-//        clif_displaymessage(s, output);
-//        return ATCE::USAGE;
-	sd->speed = 200;
-        clif_updatestatus(sd, SP::SPEED);
-        clif_displaymessage(s, "Speed changed."_s);
-    }
-
-    interval_t speed = static_cast<interval_t>(atoi(message.c_str()));
-    if (speed >= MIN_WALK_SPEED && speed <= MAX_WALK_SPEED)
-    {
-        sd->speed = speed;
-        //sd->walktimer = x;
-        //この文を追加 by れ
-        clif_updatestatus(sd, SP::SPEED);
-        clif_displaymessage(s, "Speed changed."_s);
-    }
-    else
-    {
-        AString output = STRPRINTF(
-                "Please, enter a valid speed value (usage: @speed <%d-%d>)."_fmt,
-                static_cast<uint32_t>(MIN_WALK_SPEED.count()),
-                static_cast<uint32_t>(MAX_WALK_SPEED.count()));
-        clif_displaymessage(s, output);
-        return ATCE::RANGE;
-    }
-
-    return ATCE::OKAY;
-}
-
-static
 ATCE atcommand_storage(Session *s, dumb_ptr<map_session_data> sd,
         ZString)
 {
@@ -5041,9 +5002,6 @@ Map<XString, AtCommandInfo> atcommand_info =
         "Return to your respawn point"_s}},
     {"speed"_s, {"<rate>"_s,
         60, atcommand_speed,
-        "Set walk rate"_s}},
-    {"Restartspeed"_s, {"<rate>"_s,
-        60, atcommand_Restartspeed,
         "Set walk rate"_s}},
     {"storage"_s, {""_s,
         99, atcommand_storage,
