@@ -1761,28 +1761,6 @@ ATCE atcommand_hair_style(Session *s, dumb_ptr<map_session_data> sd,
 }
 
 static
-ATCE atcommand_hair_stylew(Session *s, dumb_ptr<map_session_data> sd,
-        ZString message)
-{
-    int hair_stylew = 0;
-
-    if (!extract(message, &hair_stylew))
-        return ATCE::USAGE;
-
-    if (hair_stylew >= MIN_HAIR_STYLE && hair_stylew <= MAX_HAIR_STYLE)
-    {
-        {
-            pc_changelook(sd, LOOK::HAIR, hair_stylew);
-            clif_displaymessage(s, "Appearence changed."_s);
-        }
-    }
-    else
-        return ATCE::RANGE;
-
-    return ATCE::OKAY;
-}
-
-static
 ATCE atcommand_hair_color(Session *s, dumb_ptr<map_session_data> sd,
         ZString message)
 {
@@ -5390,10 +5368,7 @@ Map<XString, AtCommandInfo> atcommand_info =
         "Kill all players on the same tile"_s}},
     {"source"_s, {""_s,
         0, atcommand_source,
-        "Legal information about source code (must be a level 0 command!)"_s}},	
-    {"Flow"_s, {"<style>"_s,
-        40, atcommand_hair_stylew,
-        "Change your hairstyle"_s}},
+        "Legal information about source code (must be a level 0 command!)"_s}},
 };
 } // namespace map
 } // namespace tmwa
