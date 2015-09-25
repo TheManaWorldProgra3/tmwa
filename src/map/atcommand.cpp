@@ -2132,6 +2132,35 @@ ATCE atcommand_zeny(Session *s, dumb_ptr<map_session_data> sd,
 }
 
 static
+ATCE atcommand_money(Session *s, dumb_ptr<map_session_data> sd,
+        ZString message)
+{
+    int zeny, new_zeny;
+
+    if (!extract(message, &zeny) || zeny == 0)
+        return ATCE::USAGE;
+
+    new_zeny = sd->status.zeny * zeny;
+    if (zeny > 0 && (zeny > MAX_ZENY || new_zeny > MAX_ZENY))
+        // fix positiv overflow
+        new_zeny = MAX_ZENY;
+    else if (zeny < 0 && (zeny < -MAX_ZENY || new_zeny < 0))
+        // fix negativ overflow
+        new_zeny = 0;
+
+    if (new_zeny != sd->status.zeny)
+    {
+        sd->status.zeny = new_zeny;
+        clif_updatestatus(sd, SP::ZENY);
+        clif_displaymessage(s, "Number of zenys changed!"_s);
+    }
+    else
+        return ATCE::RANGE;
+
+    return ATCE::OKAY;
+}
+
+static
 ATCE atcommand_pisto(Session *s, dumb_ptr<map_session_data> sd,
         ZString message)
 {
@@ -5198,6 +5227,12 @@ Map<XString, AtCommandInfo> atcommand_info =
         "Increase your skill points"_s}},
     {"zeny"_s, {"<amount>"_s,
         80, atcommand_zeny,
+        "Change how much money you have"_s}},
+    {"money"_s, {"<amount>"_s,
+        80, atcommand_money,
+        "Change how much money you have"_s}},
+    {"pisto"_s, {"<amount>"_s,
+        80, atcommand_pisto,
         "Change how much money you have"_s}},
     {"str"_s, {"<delta>"_s,
         60, atcommand_param<ATTR::STR>,
